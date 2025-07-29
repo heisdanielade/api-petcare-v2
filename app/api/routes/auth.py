@@ -10,7 +10,7 @@ from sqlmodel import Session, select
 
 from app.db.session import get_session
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserVerify
 from app.utils.response import standard_response
 from app.core.security import hash_password
 from app.services import email_service as es
@@ -71,7 +71,7 @@ async def register(user_create: UserCreate, session: Session = Depends(get_sessi
 
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
-async def verify_email(user_email: str, verification_code: str, session: Session = Depends(get_session)) -> dict[str, Any]:
+async def verify_email(user_verify: UserVerify, session: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Verify user email.
 
@@ -90,7 +90,7 @@ async def verify_email(user_email: str, verification_code: str, session: Session
         HTTPException 400: If the verification code is invalid or expired.
         HTTPException 404: If the user's account (email) is not found in the system.
     """
-    statement = select(User).where(User.email == user_email)
+    statement = select(User).where(User.email == user_verify.email)
     user = session.exec(statement).one_or_none()
 
     if not user:
@@ -102,7 +102,7 @@ async def verify_email(user_email: str, verification_code: str, session: Session
                             detail="Account already verified")
 
     # Check code matches and is not expired
-    if (user.verification_code != verification_code or not user.verification_code_expires_at or user.verification_code_expires_at < datetime.now(timezone.utc)):
+    if (user.verification_code != user_verify.verification_code or not user.verification_code_expires_at or user.verification_code_expires_at < datetime.now(timezone.utc)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Invalid or expired verification code.")
 
