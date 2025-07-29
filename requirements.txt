@@ -24,8 +24,10 @@ passlib[bcrypt]
 psycopg2-binary==2.9.10
 pydantic==2.11.7
 pydantic_core==2.33.2
+pydantic_settings
 Pygments==2.19.2
 python-dotenv==1.1.1
+python-jose[cryptography]
 python-multipart==0.0.20
 PyYAML==6.0.2
 rich==14.1.0
@@ -35,6 +37,7 @@ sentry-sdk==2.33.2
 shellingham==1.5.4
 sniffio==1.3.1
 SQLAlchemy==2.0.41
+sqlmodel
 starlette==0.47.2
 typer==0.16.0
 typing-inspection==0.4.1
