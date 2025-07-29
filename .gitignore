@@ -4,3 +4,10 @@ __pycache__/
 *.pyc
 
 
+# Environment variable
+.env
+
+
+# Editor files
+.vscode/
+.idea/
