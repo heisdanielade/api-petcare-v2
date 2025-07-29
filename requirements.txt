@@ -9,6 +9,7 @@ email_validator==2.2.0
 fastapi==0.116.1
 fastapi-cli==0.0.8
 fastapi-cloud-cli==0.1.5
+fastapi-mail==1.5.0
 greenlet==3.2.3
 h11==0.16.0
 httpcore==1.0.9
