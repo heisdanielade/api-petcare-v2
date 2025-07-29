@@ -1,18 +1,31 @@
 
 from typing import Any
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from sqlmodel import SQLModel
 
 from app.api.routes import health
+from app.api.routes import auth
 from app.utils.response import standard_response
+from app.db.session import engine
 
-app = FastAPI()
+
+# Create DB
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Routers
 app.include_router(health.router)
+app.include_router(auth.router)
 
 
 @app.exception_handler(StarletteHTTPException)
