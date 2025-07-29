@@ -1,8 +1,17 @@
 # app/core/config.py
 
 from typing import Optional
+from pathlib import Path
 
 from pydantic_settings import BaseSettings
+from fastapi_mail import ConnectionConfig
+from fastapi.templating import Jinja2Templates
+
+# Template loader
+templates = Jinja2Templates(directory=str(
+    Path(__file__).parent.parent / "templates" / "email"))
+
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates" / "email"
 
 
 class Settings(BaseSettings):
@@ -31,3 +40,16 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+mail_config = ConnectionConfig(
+    MAIL_USERNAME=settings.SUPPORT_EMAIL,  # type: ignore
+    MAIL_PASSWORD=settings.APP_PASSWORD,  # type: ignore
+    MAIL_FROM=settings.SUPPORT_EMAIL,  # type: ignore
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True,
+    TEMPLATE_FOLDER=TEMPLATES_DIR
+)
