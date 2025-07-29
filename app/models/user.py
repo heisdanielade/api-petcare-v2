@@ -14,16 +14,20 @@ class Role(StrEnum):
 
 
 class UserBase(SQLModel):
+    __tablename__ = "app_user"  # type: ignore
+
+    id: Optional[int] = Field(default=None, primary_key=True)
     email: EmailStr
-    name: str
+    name: Optional[str] = None
     enabled: bool = False  # Until user verifies email
 
 
 class User(UserBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
     role: Role = Role.USER
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
     created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))

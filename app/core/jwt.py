@@ -16,11 +16,11 @@ def decode_access_token(token: str) -> dict[str, Any]:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY,  # type: ignore
                              algorithms=[ALGORITHM])
         return payload
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials"
-        )
+        ) from e
 
 
 def create_access_token(data: dict[str, Union[str, int]]):
