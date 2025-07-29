@@ -23,8 +23,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
     return user
 
 
-def check_enabled_user(user: User = Depends(get_current_user)):
-    if not user.enabled:
+def check_verified_user(user: User = Depends(get_current_user)):
+    if not user.is_verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Account disabled, kindly verify email")
+                            detail="Account is unverified, kindly verify email")
     return user
