@@ -2,7 +2,7 @@
 from typing import Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -41,12 +41,24 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Clean exc.errors() to remove exception objects in 'ctx'
+    def sanitize_error(err):
+        sanitized = err.copy()
+        if "ctx" in sanitized:
+            sanitized["ctx"] = {
+                k: (str(v) if isinstance(v, Exception) else v)
+                for k, v in sanitized["ctx"].items()
+            }
+        return sanitized
+
+    clean_errors = [sanitize_error(e) for e in exc.errors()]
+
     return JSONResponse(
-        status_code=422,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=standard_response(
             status="error",
             message="Validation failed",
-            data={"errors": exc.errors()}
+            data={"errors": clean_errors}
         )
     )
 
