@@ -29,4 +29,4 @@ def create_access_token(data: dict[str, Union[str, int]]):
         timedelta(seconds=settings.JWT_EXPIRATION_TIME)
     to_encode.update({"exp": expire})
 
-    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM) # type: ignore

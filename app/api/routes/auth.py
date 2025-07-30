@@ -10,10 +10,13 @@ from sqlmodel import Session, select
 
 from app.db.session import get_session
 from app.models.user import User
-from app.schemas.user import UserCreate, UserVerify
+from app.schemas.user import UserCreate
+from app.schemas.auth import VerifyEmailRequest, LoginRequest, TokenResponse
 from app.utils.response import standard_response
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.services import email_service as es
+from app.core.jwt import create_access_token
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,7 +26,7 @@ def generate_verification_code(length: int = 6):
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user_create: UserCreate, session: Session = Depends(get_session)) -> dict[str, Any]:
+async def register(user_create: UserCreate, db: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Register a new user in the system.
 
@@ -41,7 +44,7 @@ async def register(user_create: UserCreate, session: Session = Depends(get_sessi
         HTTPException 409: If the email is already taken.
     """
     # Check if user already exists
-    existing_user = session.exec(select(User).where(
+    existing_user = db.exec(select(User).where(
         User.email == user_create.email)).first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
@@ -61,9 +64,9 @@ async def register(user_create: UserCreate, session: Session = Depends(get_sessi
         updated_at=datetime.now(timezone.utc)
     )
 
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     await es.send_verification_email(email_to=user.email, code=verification_code)
 
@@ -71,7 +74,7 @@ async def register(user_create: UserCreate, session: Session = Depends(get_sessi
 
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
-async def verify_email(user_verify: UserVerify, session: Session = Depends(get_session)) -> dict[str, Any]:
+async def verify_email(user_verify: VerifyEmailRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Verify user email.
 
@@ -90,8 +93,8 @@ async def verify_email(user_verify: UserVerify, session: Session = Depends(get_s
         HTTPException 400: If the verification code is invalid or expired.
         HTTPException 404: If the user's account (email) is not found in the system.
     """
-    statement = select(User).where(User.email == user_verify.email)
-    user = session.exec(statement).one_or_none()
+    stmt = select(User).where(User.email == user_verify.email)
+    user = db.exec(stmt).one_or_none()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -115,9 +118,55 @@ async def verify_email(user_verify: UserVerify, session: Session = Depends(get_s
     user.verification_code = None
     user.verification_code_expires_at = None
 
-    session.add(user)
-    session.commit()
+    db.add(user)
+    db.commit()
 
     await es.send_welcome_email(email_to=user.email)
 
     return standard_response(status="success", message="Email verified successfully.")
+
+
+@router.post("/login", status_code=status.HTTP_200_OK)
+async def login(data: LoginRequest, db: Session = Depends(get_session)):
+    """
+    Login user.
+
+    This endpoint verifies a user's credentials to login with a provided email and password.
+    Checks that user.is_verified == True.
+    On success, returns a JWT access token.
+
+    Args:
+        email (from LoginRequest): Email address of user.
+        password (from LoginRequest): Plane password gotten from user.
+
+    Returns:
+        dict: A success message with JWT access token.
+
+    Raises:
+        HTTPException 400: If the provided login credentials are invalid.
+        HTTPException 403: If the user's account (email) is not verified.
+    """
+    stmt = select(User).where(User.email == data.email)
+    user = db.exec(stmt).one_or_none()
+
+    if not user or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login credentials")
+
+    if not user.is_verified:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Account is unverified, kindly verify your email")
+
+    expire = datetime.now(timezone.utc) + \
+        timedelta(seconds=settings.JWT_EXPIRATION_TIME)
+    access_token = create_access_token({"sub": user.email})
+
+    return standard_response(
+        status="success",
+        message="Login successful",
+        data={
+            "token": access_token,
+            "type": "bearer",
+            "expires_at": expire.isoformat()
+        }
+    )
