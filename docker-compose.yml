@@ -9,8 +9,6 @@ services:
       - db
     volumes: 
       - .:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --reload
-
   db:
     image: postgres:15
     container_name: petcare-db
