@@ -127,7 +127,7 @@ async def verify_email(user_verify: VerifyEmailRequest, db: Session = Depends(ge
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)
-async def login(data: LoginRequest, db: Session = Depends(get_session)):
+async def login(data: LoginRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Login user.
 

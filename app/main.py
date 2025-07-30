@@ -1,18 +1,19 @@
 
 from typing import Any
-from contextlib import asynccontextmanager
+# from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from sqlmodel import SQLModel
+# from sqlmodel import SQLModel
 
 from app.api.routes import health
 from app.api.routes import auth
+from app.api.routes import user
 from app.utils.response import standard_response
-from app.db.session import engine
+# from app.db.session import engine
 
 
 # Create DB
@@ -41,6 +42,7 @@ app.add_middleware(
 # Routers
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(user.router)
 
 
 @app.exception_handler(StarletteHTTPException)
