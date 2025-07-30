@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlmodel import SQLModel
 
@@ -23,6 +24,19 @@ from app.db.session import engine
 
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # frontend dev URL
+    "https://pamietampsa.netlify.app",  # frontend prod URL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Routers
 app.include_router(health.router)
