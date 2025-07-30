@@ -15,13 +15,14 @@ from app.db.session import engine
 
 
 # Create DB
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    SQLModel.metadata.create_all(engine)
-    yield
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     SQLModel.metadata.create_all(engine)
+#     yield
+# app = FastAPI(lifespan=lifespan)
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 # Routers
 app.include_router(health.router)
