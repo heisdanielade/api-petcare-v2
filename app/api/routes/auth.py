@@ -101,8 +101,13 @@ async def verify_email(user_verify: UserVerify, session: Session = Depends(get_s
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="Account already verified")
 
+    # Make expires_at timezone-aware
+    expires_at = user.verification_code_expires_at
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
     # Check code matches and is not expired
-    if (user.verification_code != user_verify.verification_code or not user.verification_code_expires_at or user.verification_code_expires_at < datetime.now(timezone.utc)):
+    if (user.verification_code != user_verify.verification_code or not user.verification_code_expires_at or expires_at < datetime.now(timezone.utc)):  # type: ignore
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Invalid or expired verification code.")
 
@@ -112,5 +117,7 @@ async def verify_email(user_verify: UserVerify, session: Session = Depends(get_s
 
     session.add(user)
     session.commit()
+
+    await es.send_welcome_email(email_to=user.email)
 
     return standard_response(status="success", message="Email verified successfully.")
