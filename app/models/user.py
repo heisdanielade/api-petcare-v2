@@ -20,7 +20,7 @@ class UserBase(SQLModel):
     email: EmailStr
     name: Optional[str] = None
     # If user deactivates account
-    is_enabled: bool = Field(default=False, nullable=False)
+    is_enabled: bool = Field(default=True, nullable=False)
     # True when user verifies email
     is_verified: bool = Field(default=False, nullable=False)
 
