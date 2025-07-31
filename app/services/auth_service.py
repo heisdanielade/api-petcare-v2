@@ -10,7 +10,7 @@ from sqlmodel import Session, select
 
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.schemas.auth import VerifyEmailRequest, LoginRequest
+from app.schemas.auth import VerifyEmailRequest, LoginRequest, ResendVerificationEmailRequest
 from app.core.security import hash_password, verify_password
 from app.services import email_service as es
 from app.core.jwt import create_access_token
@@ -100,7 +100,7 @@ async def verify_new_user_email(user_verify: VerifyEmailRequest, db: Session) ->
     # Check code matches and is not expired
     if (user.verification_code != user_verify.verification_code or not user.verification_code_expires_at or expires_at < datetime.now(timezone.utc)):  # type: ignore
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Invalid or expired verification code.")
+                            detail="Invalid or expired verification code")
 
     user.is_verified = True
     user.verification_code = None
@@ -151,3 +151,38 @@ async def login_existing_user(login_request: LoginRequest, db: Session) -> dict[
         "type": "bearer",
         "expiry": expire,
     }
+
+
+async def resend_verification_email_to_user(request: ResendVerificationEmailRequest, db: Session) -> None:
+    """
+    Generate and send a new email verification code to the user.
+
+    Creates a new verification code and dispatches it to the specified email address.
+
+    Args:
+        request (ResendVerificationEmailRequest): Pydantic model containing the user's email.
+        db (Session): SQLModel session used for potential database interactions.
+    """
+    stmt = select(User).where(User.email == request.email)
+    existing_user = db.exec(stmt).one_or_none()
+
+    if not existing_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Account does not exist")
+
+    if existing_user.is_verified:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="Account is already verified")
+
+    code = generate_verification_code()
+    expires_at = datetime.now(timezone.utc) + \
+        timedelta(minutes=10)  # Valid for 10 minutes
+
+    existing_user.verification_code = code
+    existing_user.verification_code_expires_at = expires_at
+    existing_user.updated_at = datetime.now(timezone.utc)
+
+    db.add(existing_user)
+    db.commit()
+
+    await es.send_verification_email(email_to=existing_user.email, code=code)

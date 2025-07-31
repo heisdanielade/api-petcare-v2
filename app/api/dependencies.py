@@ -20,7 +20,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
     user = session.exec(stmt).one_or_none()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account not found")
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account does not exist")
     return user
 
 
