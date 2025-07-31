@@ -7,12 +7,12 @@ from sqlmodel import Session
 
 from app.db.session import get_session
 from app.schemas.user import UserCreate
-from app.schemas.auth import VerifyEmailRequest, LoginRequest
-from app.services.auth_service import register_new_user, verify_new_user_email, login_existing_user
+from app.schemas.auth import VerifyEmailRequest, LoginRequest, ResendVerificationEmailRequest
+from app.services.auth_service import register_new_user, verify_new_user_email, login_existing_user, resend_verification_email_to_user
 from app.utils.response import standard_response
 
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -37,7 +37,7 @@ async def register(user_create: UserCreate, db: Session = Depends(get_session)) 
 
     return standard_response(
         status="success",
-        message="Registration successful. Please check your email to verify your account."
+        message="Registration successful. Please check your email to verify your account"
     )
 
 
@@ -63,7 +63,7 @@ async def verify_email(user_verify: VerifyEmailRequest, db: Session = Depends(ge
     """
     await verify_new_user_email(user_verify=user_verify, db=db)
 
-    return standard_response(status="success", message="Email verified successfully.")
+    return standard_response(status="success", message="Email verified successfully")
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)
@@ -89,4 +89,25 @@ async def login(data: LoginRequest, db: Session = Depends(get_session)) -> dict[
         status="success",
         message="Login successful",
         data=response
+    )
+
+
+@router.post("/resend-verification", status_code=status.HTTP_200_OK)
+async def resend_verification_email(request: ResendVerificationEmailRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+    """
+    Resend a verification email to a user.
+
+    Accepts the user's email and triggers sending of a new verification email if applicable.
+
+    Args:
+        request (ResendVerificationEmailRequest): Email address to resend the verification code to.
+
+    Returns:
+        dict(str, Any): Success message indicating that the verification email has been sent.
+    """
+    await resend_verification_email_to_user(request=request, db=db)
+
+    return standard_response(
+        status="success",
+        message="Verification email sent successfully"
     )

@@ -9,9 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 # from sqlmodel import SQLModel
 
-from app.api.routes import health
-from app.api.routes import auth
-from app.api.routes import user
+from app.api.v1.routes import health
+from app.api.v1.routes import auth
+from app.api.v1.routes import user
 from app.utils.response import standard_response
 # from app.db.session import engine
 
@@ -40,9 +40,9 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(health.router)
-app.include_router(auth.router)
-app.include_router(user.router)
+app.include_router(health.router, prefix="/v1/health", tags=["health"])
+app.include_router(auth.router, prefix="/v1/auth", tags=["auth"])
+app.include_router(user.router, prefix="/v1/user", tags=["user"])
 
 
 @app.exception_handler(StarletteHTTPException)

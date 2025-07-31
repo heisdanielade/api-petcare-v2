@@ -9,10 +9,10 @@ from app.utils.response import standard_response
 from app.api.dependencies import get_current_user
 from app.services.user_service import get_current_user_details
 
-router = APIRouter(prefix="/user", tags=["user"])
+router = APIRouter()
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("/me", status_code=status.HTTP_200_OK)
 async def user_info(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """
     Retrieve the currently authenticated user's profile details.
