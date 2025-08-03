@@ -13,6 +13,7 @@ from app.api.v1.routes import health
 from app.api.v1.routes import auth
 from app.api.v1.routes import user
 from app.utils.response import standard_response
+from app.core.config import settings
 # from app.db.session import engine
 
 
@@ -27,13 +28,14 @@ from app.utils.response import standard_response
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",  # frontend dev URL
-    "https://pamietampsa.netlify.app",  # frontend prod URL
+    settings.FRONTEND_DEV_URL,  # frontend dev URL
+    settings.FRONTEND_PROD_URL,  # frontend prod URL
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # type: ignore
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
