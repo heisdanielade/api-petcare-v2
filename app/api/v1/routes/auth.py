@@ -113,7 +113,7 @@ async def resend_verification_email(request: auth_schemas.ResendVerificationEmai
     )
 
 
-@router.post("request-password-reset", status_code=status.HTTP_200_OK)
+@router.post("/request-password-reset", status_code=status.HTTP_200_OK)
 async def request_password_reset(request: auth_schemas.PasswordResetLinkRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Resend a password reset email to a user.
@@ -134,7 +134,7 @@ async def request_password_reset(request: auth_schemas.PasswordResetLinkRequest,
     )
 
 
-@router.post("reset-password", status_code=status.HTTP_200_OK)
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(request: auth_schemas.ResetPasswordRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
     """
     Change the password of a user.
