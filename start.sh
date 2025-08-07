@@ -11,7 +11,7 @@ fi
 
 
 echo "(i) Running Alembic migrations..."
-alembic downgrade -1 || echo "(w) downgrade failed, continuing"
+alembic downgrade -1 || echo "(w) Alembic downgrade failed, continuing.."
 alembic upgrade head || { echo "(e) Alembic upgrade failed"; exit 1; }
 
 echo "(i) Starting FastAPI app with Gunicorn..."
