@@ -11,7 +11,8 @@ fi
 
 
 echo "(i) Running Alembic migrations..."
-alembic upgrade head
+alembic downgrade -1 || echo "(w) downgrade failed, continuing"
+alembic upgrade head || { echo "(e) Alembic upgrade failed"; exit 1; }
 
 echo "(i) Starting FastAPI app with Gunicorn..."
 gunicorn app.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4
