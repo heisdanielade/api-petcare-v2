@@ -82,6 +82,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(Exception)
+async def internal_server_error_handler(request: Request, exc: Exception):
+    # TODO: log the stack trace
+
+    return JSONResponse(
+        status_code=500,
+        content=standard_response(
+            status="error",
+            message="An unexpected error occured",
+        )
+    )
+
+
 @app.get("/")
 def read_root() -> dict[str, Any]:
     """Sample base endpoint."""

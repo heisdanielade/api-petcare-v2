@@ -209,10 +209,8 @@ class AuthService:
         existing_user = db.exec(stmt).one_or_none()
 
         if not existing_user or not existing_user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occured"
-            )  # To prevent email enumeration attack, give base server error response without details
+            # TODO: add descriptive logs
+            ...  # To prevent email enumeration attack, give base server error response without details
 
         reset_token = create_password_reset_token(request.email)
 
