@@ -36,7 +36,7 @@ def upgrade() -> None:
                     sa.Column('is_verified', sa.Boolean(), nullable=False),
                     sa.Column(
                         'hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-                    sa.Column('role', role_enum, name='role', nullable=False),
+                    sa.Column('role', role_enum, nullable=False),
                     sa.Column('verification_code',
                               sqlmodel.sql.sqltypes.AutoString(), nullable=True),
                     sa.Column('verification_code_expires_at',
