@@ -1,28 +1,17 @@
 
 from typing import Any
-# from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-# from sqlmodel import SQLModel
 
 from app.api.v1.routes import health
 from app.api.v1.routes import auth
 from app.api.v1.routes import user
 from app.utils.response import standard_response
 from app.core.config import settings
-# from app.db.session import engine
-
-
-# Create DB
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     SQLModel.metadata.create_all(engine)
-#     yield
-# app = FastAPI(lifespan=lifespan)
 
 
 app = FastAPI()
@@ -32,7 +21,7 @@ origins = [
     settings.FRONTEND_PROD_URL,  # frontend prod URL
 ]
 
-
+# Handle CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # type: ignore
