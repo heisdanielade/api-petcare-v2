@@ -152,7 +152,7 @@ class AuthService:
 
         db.add(existing_user)
         db.commit()
-        
+
         return {
             "token": access_token,
             "type": "bearer",

@@ -1,11 +1,12 @@
 # app/models/user.py
 
-from typing import Optional
+from typing import Any, Optional
 from enum import StrEnum
 from datetime import datetime, timezone
 
 from sqlmodel import SQLModel, Field
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr
+from pydantic import Field as PydanticField
 
 
 class Role(StrEnum):
@@ -30,8 +31,18 @@ class User(UserBase, table=True):
     role: Role = Role.USER
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
+    # Pydantic field to ensure attribute can not be modified via API request
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))
     last_login_at: Optional[datetime] = None
+
+    def __setattr__(self, name, value) -> None:
+        """
+        Prevent update for `created_at` field.
+        NOTE: Ultimate protection should be enforced in the DB.
+        """
+        if name == "created_at" and hasattr(self, "created_at"):
+            raise AttributeError("created_at is immutable")
+        super().__setattr__(name, value)
