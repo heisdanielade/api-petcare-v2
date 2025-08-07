@@ -83,34 +83,35 @@ class AuthService:
             HTTPException: 400 Bad Request if the verification code is invalid or expired.
         """
         stmt = select(User).where(User.email == user_verify.email)
-        user = db.exec(stmt).one_or_none()
+        existing_user = db.exec(stmt).one_or_none()
 
-        if not user:
+        if not existing_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Account does not exist")
 
-        if user.is_verified:
+        if existing_user.is_verified:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                                 detail="Account already verified")
 
         # Make expires_at timezone-aware
-        expires_at = user.verification_code_expires_at
+        expires_at = existing_user.verification_code_expires_at
         if expires_at and expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
 
         # Check code matches and is not expired
-        if (user.verification_code != user_verify.verification_code or not user.verification_code_expires_at or expires_at < datetime.now(timezone.utc)):  # type: ignore
+        if (existing_user.verification_code != user_verify.verification_code or not existing_user.verification_code_expires_at or expires_at < datetime.now(timezone.utc)):  # type: ignore
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Invalid or expired verification code")
 
-        user.is_verified = True
-        user.verification_code = None
-        user.verification_code_expires_at = None
+        existing_user.is_verified = True
+        existing_user.verification_code = None
+        existing_user.verification_code_expires_at = None
+        existing_user.updated_at = datetime.now(timezone.utc)
 
-        db.add(user)
+        db.add(existing_user)
         db.commit()
 
-        await EmailService.send_welcome_email(email_to=user.email)
+        await EmailService.send_welcome_email(email_to=existing_user.email)
 
     @staticmethod
     async def login_existing_user(login_request: auth_schemas.LoginRequest, db: Session) -> dict[str, Any]:
