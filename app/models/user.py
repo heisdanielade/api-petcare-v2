@@ -34,11 +34,4 @@ class User(UserBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))
-
-    @field_validator("verification_code_expires_at")
-    def set_utc_timezone(cls, value):
-        if value is None:
-            return value
-        if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+    last_login_at: Optional[datetime] = None

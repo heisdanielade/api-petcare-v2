@@ -134,20 +134,25 @@ class AuthService:
             HTTPException: 403 Forbidden if the user account is not verified.
         """
         stmt = select(User).where(User.email == login_request.email)
-        user = db.exec(stmt).one_or_none()
+        existing_user = db.exec(stmt).one_or_none()
 
-        if not user or not verify_password(login_request.password, user.hashed_password):
+        if not existing_user or not verify_password(login_request.password, existing_user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login credentials")
 
-        if not user.is_verified:
+        if not existing_user.is_verified:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Account is unverified, kindly verify your email")
 
         expire = datetime.now(timezone.utc) + \
             timedelta(seconds=settings.JWT_EXPIRATION_TIME)
-        access_token = create_access_token({"sub": user.email})
+        access_token = create_access_token({"sub": existing_user.email})
 
+        existing_user.last_login_at = datetime.now(timezone.utc)
+
+        db.add(existing_user)
+        db.commit()
+        
         return {
             "token": access_token,
             "type": "bearer",
