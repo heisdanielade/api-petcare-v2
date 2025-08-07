@@ -1,12 +1,11 @@
 # app/models/user.py
 
-from typing import Any, Optional
+from typing import Optional
 from enum import StrEnum
 from datetime import datetime, timezone
 
 from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
-from pydantic import Field as PydanticField
 
 
 class Role(StrEnum):
