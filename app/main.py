@@ -1,10 +1,13 @@
 # app/main.py
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.utils import get_openapi
 
 from app.api.v1.routes import health
 from app.api.v1.routes import auth
@@ -13,9 +16,10 @@ from app.api.v1.routes import user
 import app.utils.handlers as handler
 from app.utils.response import standard_response
 from app.core.config import settings
+from app.api.dependencies import authenticate
 
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
-app = FastAPI()
 
 origins = [
     settings.FRONTEND_DEV_URL,  # frontend dev URL
@@ -46,6 +50,22 @@ app.add_exception_handler(
     handler.validation_exception_handler)  # type: ignore
 app.add_exception_handler(
     Exception, handler.internal_server_error_handler)
+
+
+# Routes for API docs
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui(authenticated: bool = Depends(authenticate)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="API Docs")
+
+
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc_ui(authenticated: bool = Depends(authenticate)):
+    return get_redoc_html(openapi_url="/openapi.json", title="API Docs")
+
+
+@app.get("/openapi.json", include_in_schema=False)
+async def openapi_json(authenticated: bool = Depends(authenticate)):
+    return get_openapi(title="My API", version="1.0.0", routes=app.routes)
 
 
 @app.get("/")

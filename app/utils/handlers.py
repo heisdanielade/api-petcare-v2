@@ -11,6 +11,14 @@ from app.utils.response import standard_response
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Return original response for api docs authentication
+    if exc.status_code == 401 and exc.headers is not None and "WWW-Authenticate" in exc.headers:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers=exc.headers,
+        )
+    # Otherwise
     return JSONResponse(
         status_code=exc.status_code,
         content=standard_response(
