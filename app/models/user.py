@@ -9,11 +9,19 @@ from pydantic import EmailStr
 
 
 class Role(StrEnum):
+    """
+    Defines user roles for access control and permission management.
+    """
+
     USER = "USER"
     ADMIN = "ADMIN"
 
 
 class UserBase(SQLModel):
+    """
+    Base user model representing core user details and account status.
+    """
+
     __tablename__ = "app_user"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -26,6 +34,12 @@ class UserBase(SQLModel):
 
 
 class User(UserBase, table=True):
+    """
+    User model extending UserBase with authentication, role, and audit timestamps.
+
+    Enforces immutability of `created_at` at the model level.
+    """
+
     hashed_password: str
     role: Role = Role.USER
     verification_code: Optional[str] = None
