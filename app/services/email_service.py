@@ -21,7 +21,8 @@ class EmailService:
             subject=f"{code} is your verification code",
             recipients=[email_to],
             body=rendered,
-            subtype=MessageType.html)
+            subtype=MessageType.html,
+        )
 
         try:
             await fm.send_message(message=message)
@@ -39,7 +40,8 @@ class EmailService:
             subject="Welcome to PamietamPsa",
             recipients=[email_to],
             body=rendered,
-            subtype=MessageType.html)
+            subtype=MessageType.html,
+        )
 
         try:
             await fm.send_message(message=message)
@@ -49,7 +51,9 @@ class EmailService:
 
     @staticmethod
     async def send_password_reset_email(email_to: str, reset_token: str):
-        reset_link = f"{settings.FRONTEND_PROD_URL}/u/reset-password?token={reset_token}"
+        reset_link = (
+            f"{settings.FRONTEND_PROD_URL}/u/reset-password?token={reset_token}"
+        )
         template_path = TEMPLATES_DIR / "auth" / "password-reset.html"
         template_str = template_path.read_text()
         rendered = Template(template_str).render(reset_link=reset_link)
@@ -58,7 +62,8 @@ class EmailService:
             subject="You requested a Password Reset",
             recipients=[email_to],
             body=rendered,
-            subtype=MessageType.html)
+            subtype=MessageType.html,
+        )
 
         try:
             await fm.send_message(message=message)
@@ -76,11 +81,11 @@ class EmailService:
             subject="You changed your Password",
             recipients=[email_to],
             body=rendered,
-            subtype=MessageType.html)
+            subtype=MessageType.html,
+        )
 
         try:
             await fm.send_message(message=message)
         except Exception as e:
             # TODO: add logging
-            print(
-                f"Failed to password reset notification email to {email_to}: {e}")
+            print(f"Failed to password reset notification email to {email_to}: {e}")

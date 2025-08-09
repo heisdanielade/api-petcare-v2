@@ -29,7 +29,7 @@ origins = [
 # Middlewares
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # type: ignore
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,14 +42,9 @@ app.include_router(user.router, prefix="/v1/user", tags=["user"])
 
 
 # Exception handlers
-app.add_exception_handler(
-    StarletteHTTPException,
-    handler.http_exception_handler)  # type: ignore
-app.add_exception_handler(
-    RequestValidationError,
-    handler.validation_exception_handler)  # type: ignore
-app.add_exception_handler(
-    Exception, handler.internal_server_error_handler)
+app.add_exception_handler(StarletteHTTPException, handler.http_exception_handler)
+app.add_exception_handler(RequestValidationError, handler.validation_exception_handler)
+app.add_exception_handler(Exception, handler.internal_server_error_handler)
 
 
 # Routes for API docs

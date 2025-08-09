@@ -14,7 +14,7 @@ class Role(StrEnum):
 
 
 class UserBase(SQLModel):
-    __tablename__ = "app_user"  # type: ignore
+    __tablename__ = "app_user"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     email: EmailStr
@@ -30,11 +30,8 @@ class User(UserBase, table=True):
     role: Role = Role.USER
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
-    # Pydantic field to ensure attribute can not be modified via API request
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login_at: Optional[datetime] = None
 
     def __setattr__(self, name, value) -> None:

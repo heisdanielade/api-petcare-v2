@@ -28,7 +28,5 @@ async def user_info(current_user: User = Depends(get_current_user)) -> dict[str,
     response = await UserService.get_current_user_details(current_user=current_user)
 
     return standard_response(
-        status="success",
-        message="User details retrieved successfully",
-        data=response
+        status="success", message="User details retrieved successfully", data=response
     )

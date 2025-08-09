@@ -16,7 +16,9 @@ router = APIRouter()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user_create: user_schemas.UserCreate, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def register(
+    user_create: user_schemas.UserCreate, db: Session = Depends(get_session)
+) -> dict[str, Any]:
     """
     Register a new user account.
 
@@ -37,12 +39,14 @@ async def register(user_create: user_schemas.UserCreate, db: Session = Depends(g
 
     return standard_response(
         status="success",
-        message="Registration successful. Please check your email to verify your account"
+        message="Registration successful. Please check your email to verify your account",
     )
 
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
-async def verify_email(user_verify: auth_schemas.VerifyEmailRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def verify_email(
+    user_verify: auth_schemas.VerifyEmailRequest, db: Session = Depends(get_session)
+) -> dict[str, Any]:
     """
     Endpoint to verify a user's email address.
 
@@ -67,7 +71,9 @@ async def verify_email(user_verify: auth_schemas.VerifyEmailRequest, db: Session
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)
-async def login(data: auth_schemas.LoginRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def login(
+    data: auth_schemas.LoginRequest, db: Session = Depends(get_session)
+) -> dict[str, Any]:
     """
     Authenticate a user and issue an access token.
 
@@ -86,14 +92,15 @@ async def login(data: auth_schemas.LoginRequest, db: Session = Depends(get_sessi
     response = await AuthService.login_existing_user(login_request=data, db=db)
 
     return standard_response(
-        status="success",
-        message="Login successful",
-        data=response
+        status="success", message="Login successful", data=response
     )
 
 
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
-async def resend_verification_email(request: auth_schemas.ResendVerificationEmailRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def resend_verification_email(
+    request: auth_schemas.ResendVerificationEmailRequest,
+    db: Session = Depends(get_session),
+) -> dict[str, Any]:
     """
     Resend a verification email to a user.
 
@@ -108,13 +115,14 @@ async def resend_verification_email(request: auth_schemas.ResendVerificationEmai
     await AuthService.resend_verification_email(request=request, db=db)
 
     return standard_response(
-        status="success",
-        message="Verification email sent successfully"
+        status="success", message="Verification email sent successfully"
     )
 
 
 @router.post("/request-password-reset", status_code=status.HTTP_200_OK)
-async def request_password_reset(request: auth_schemas.PasswordResetLinkRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def request_password_reset(
+    request: auth_schemas.PasswordResetLinkRequest, db: Session = Depends(get_session)
+) -> dict[str, Any]:
     """
     Resend a password reset email to a user.
 
@@ -129,13 +137,14 @@ async def request_password_reset(request: auth_schemas.PasswordResetLinkRequest,
     await AuthService.request_password_reset(request=request, db=db)
 
     return standard_response(
-        status="success",
-        message="Password reset email sent successfully"
+        status="success", message="Password reset email sent successfully"
     )
 
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
-async def reset_password(request: auth_schemas.ResetPasswordRequest, db: Session = Depends(get_session)) -> dict[str, Any]:
+async def reset_password(
+    request: auth_schemas.ResetPasswordRequest, db: Session = Depends(get_session)
+) -> dict[str, Any]:
     """
     Change the password of a user.
 
@@ -147,9 +156,8 @@ async def reset_password(request: auth_schemas.ResetPasswordRequest, db: Session
     Returns:
         dict(str, Any): Success message indicating that the user's password has been reset.
     """
-    await AuthService.reset_user_password(token=request.token, new_password=request.new_password, db=db)
-
-    return standard_response(
-        status="success",
-        message="Password reset successfully"
+    await AuthService.reset_user_password(
+        token=request.token, new_password=request.new_password, db=db
     )
+
+    return standard_response(status="success", message="Password reset successfully")

@@ -20,10 +20,12 @@ from app.core.jwt import create_access_token, create_password_reset_token, decod
 class AuthService:
     @staticmethod
     def generate_verification_code(length: int = 6):
-        return ''.join(random.choices(string.digits, k=length))
+        return "".join(random.choices(string.digits, k=length))
 
     @staticmethod
-    async def register_new_user(user_create: user_schemas.UserCreate, db: Session) -> None:
+    async def register_new_user(
+        user_create: user_schemas.UserCreate, db: Session
+    ) -> None:
         """
         Register a new user in the database and initiate email verification.
 
@@ -39,16 +41,19 @@ class AuthService:
             HTTPException: 409 Conflict if a user with the given email already exists.
         """
         # Check if user already exists
-        existing_user = db.exec(select(User).where(
-            User.email == user_create.email)).first()
+        existing_user = db.exec(
+            select(User).where(User.email == user_create.email)
+        ).first()
         if existing_user:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail="Account already exists")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Account already exists"
+            )
 
         # Verification code to be sent yo user email to enable user's account
         verification_code = AuthService.generate_verification_code()
-        expires_at = datetime.now(timezone.utc) + \
-            timedelta(minutes=10)  # Valid for 10 minutes
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=10
+        )  # Valid for 10 minutes
 
         user: User = User(
             email=user_create.email,
@@ -56,16 +61,20 @@ class AuthService:
             verification_code=verification_code,
             verification_code_expires_at=expires_at,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            updated_at=datetime.now(timezone.utc),
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
-        await EmailService.send_verification_email(email_to=user.email, code=verification_code)
+        await EmailService.send_verification_email(
+            email_to=user.email, code=verification_code
+        )
 
     @staticmethod
-    async def verify_user_email(user_verify: auth_schemas.VerifyEmailRequest, db: Session) -> None:
+    async def verify_user_email(
+        user_verify: auth_schemas.VerifyEmailRequest, db: Session
+    ) -> None:
         """
         Verify a user's email address using a verification code.
 
@@ -86,12 +95,14 @@ class AuthService:
         existing_user = db.exec(stmt).one_or_none()
 
         if not existing_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Account does not exist")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account does not exist"
+            )
 
         if existing_user.is_verified:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail="Account already verified")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Account already verified"
+            )
 
         # Make expires_at timezone-aware
         expires_at = existing_user.verification_code_expires_at
@@ -99,9 +110,11 @@ class AuthService:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
 
         # Check code matches and is not expired
-        if (existing_user.verification_code != user_verify.verification_code or not existing_user.verification_code_expires_at or expires_at < datetime.now(timezone.utc)):  # type: ignore
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Invalid or expired verification code")
+        if existing_user.verification_code != user_verify.verification_code or not existing_user.verification_code_expires_at or expires_at < datetime.now(timezone.utc):  # type: ignore
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired verification code",
+            )
 
         existing_user.is_verified = True
         existing_user.verification_code = None
@@ -114,7 +127,9 @@ class AuthService:
         await EmailService.send_welcome_email(email_to=existing_user.email)
 
     @staticmethod
-    async def login_existing_user(login_request: auth_schemas.LoginRequest, db: Session) -> dict[str, Any]:
+    async def login_existing_user(
+        login_request: auth_schemas.LoginRequest, db: Session
+    ) -> dict[str, Any]:
         """
         Authenticate an existing user and generate a JWT access token.
 
@@ -136,16 +151,23 @@ class AuthService:
         stmt = select(User).where(User.email == login_request.email)
         existing_user = db.exec(stmt).one_or_none()
 
-        if not existing_user or not verify_password(login_request.password, existing_user.hashed_password):
+        if not existing_user or not verify_password(
+            login_request.password, existing_user.hashed_password
+        ):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login credentials")
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid login credentials",
+            )
 
         if not existing_user.is_verified:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail="Account is unverified, kindly verify your email")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is unverified, kindly verify your email",
+            )
 
-        expire = datetime.now(timezone.utc) + \
-            timedelta(seconds=settings.JWT_EXPIRATION_TIME)
+        expire = datetime.now(timezone.utc) + timedelta(
+            seconds=settings.JWT_EXPIRATION_TIME
+        )
         access_token = create_access_token({"sub": existing_user.email})
 
         existing_user.last_login_at = datetime.now(timezone.utc)
@@ -160,7 +182,9 @@ class AuthService:
         }
 
     @staticmethod
-    async def resend_verification_email(request: auth_schemas.ResendVerificationEmailRequest, db: Session) -> None:
+    async def resend_verification_email(
+        request: auth_schemas.ResendVerificationEmailRequest, db: Session
+    ) -> None:
         """
         Generate and send a new email verification code to the user.
 
@@ -174,16 +198,20 @@ class AuthService:
         existing_user = db.exec(stmt).one_or_none()
 
         if not existing_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Account does not exist")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account does not exist"
+            )
 
         if existing_user.is_verified:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail="Account is already verified")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Account is already verified",
+            )
 
         code = AuthService.generate_verification_code()
-        expires_at = datetime.now(timezone.utc) + \
-            timedelta(minutes=10)  # Valid for 10 minutes
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=10
+        )  # Valid for 10 minutes
 
         existing_user.verification_code = code
         existing_user.verification_code_expires_at = expires_at
@@ -192,10 +220,14 @@ class AuthService:
         db.add(existing_user)
         db.commit()
 
-        await EmailService.send_verification_email(email_to=existing_user.email, code=code)
+        await EmailService.send_verification_email(
+            email_to=existing_user.email, code=code
+        )
 
     @staticmethod
-    async def request_password_reset(request: auth_schemas.PasswordResetLinkRequest, db: Session) -> None:
+    async def request_password_reset(
+        request: auth_schemas.PasswordResetLinkRequest, db: Session
+    ) -> None:
         """
         Send a password reset email with a reset link to the user.
 
@@ -214,7 +246,9 @@ class AuthService:
 
         reset_token = create_password_reset_token(request.email)
 
-        await EmailService.send_password_reset_email(email_to=existing_user.email, reset_token=reset_token)
+        await EmailService.send_password_reset_email(
+            email_to=existing_user.email, reset_token=reset_token
+        )
 
     @staticmethod
     async def reset_user_password(token: str, new_password: str, db: Session) -> None:
@@ -241,9 +275,11 @@ class AuthService:
         existing_user.updated_at = now  # type: ignore
 
         # User-friendly time format
-        reset_time = now.strftime('%Y-%m-%d %H:%M:%S UTC')
+        reset_time = now.strftime("%Y-%m-%d %H:%M:%S UTC")
 
         db.add(existing_user)
         db.commit()
 
-        await EmailService.send_password_reset_notification_email(email_to=existing_user.email, reset_time=reset_time)
+        await EmailService.send_password_reset_notification_email(
+            email_to=existing_user.email, reset_time=reset_time
+        )
