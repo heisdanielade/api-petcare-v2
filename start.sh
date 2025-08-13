@@ -19,9 +19,9 @@ alembic upgrade head || { echo "(e) Alembic upgrade failed"; exit 1; }
 
 # List of columns to verify
 REQUIRED_COLUMNS=(
-    "users.is_deleted"
-    "users.updated_at"
-    "users.created_at"
+    "app_user.is_deleted"
+    "app_user.updated_at"
+    "app_user.created_at"
 )
 
 for col in "${REQUIRED_COLUMNS[@]}"; do
