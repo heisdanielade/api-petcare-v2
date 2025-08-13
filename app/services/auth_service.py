@@ -163,6 +163,10 @@ class AuthService:
                 detail="Account is unverified, kindly verify your email",
             )
 
+        # Login can remove account deletion flag
+        if existing_user.is_deleted:
+            existing_user.is_deleted = False
+
         expire = datetime.now(timezone.utc) + timedelta(
             seconds=settings.JWT_EXPIRATION_TIME
         )

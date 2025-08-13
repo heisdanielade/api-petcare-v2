@@ -35,7 +35,7 @@ class UserBase(SQLModel):
         default=False,
         nullable=False,
     )
-    # True when user requests account deletion
+    # True when user requests account deletion, Login can remove account deletion flag
     is_deleted: bool = Field(
         sa_column=Column(Boolean, nullable=False, server_default="false")
     )
