@@ -11,6 +11,7 @@ fi
 
 
 echo "(i) Running Alembic migrations..."
+alembic downgrade -1
 alembic upgrade head || { echo "(e) Alembic upgrade failed"; exit 1; }
 
 echo "(i) Showing migration history..."
