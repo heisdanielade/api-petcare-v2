@@ -5,6 +5,7 @@ from enum import StrEnum
 from datetime import datetime, timezone
 
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Boolean, Column, DateTime, func
 from pydantic import EmailStr
 
 
@@ -27,10 +28,17 @@ class UserBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: EmailStr
     name: Optional[str] = None
-    # If user deactivates account
+    # If user's account is deactivated (by choice or system penalty)
     is_enabled: bool = Field(default=True, nullable=False)
     # True when user verifies email
-    is_verified: bool = Field(default=False, nullable=False)
+    is_verified: bool = Field(
+        default=False,
+        nullable=False,
+    )
+    # True when user requests account deletion
+    is_deleted: bool = Field(
+        sa_column=Column(Boolean, nullable=False, server_default="false")
+    )
 
 
 class User(UserBase, table=True):
@@ -45,7 +53,13 @@ class User(UserBase, table=True):
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),  # PostgreSQL DB time config must be set to UTC
+            server_default=func.now(),
+            onupdate=func.now(),
+        )
+    )
     last_login_at: Optional[datetime] = None
 
     def __setattr__(self, name, value) -> None:
