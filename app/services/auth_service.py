@@ -119,8 +119,6 @@ class AuthService:
         existing_user.is_verified = True
         existing_user.verification_code = None
         existing_user.verification_code_expires_at = None
-        existing_user.updated_at = datetime.now(timezone.utc)
-
         db.add(existing_user)
         db.commit()
 
@@ -215,7 +213,6 @@ class AuthService:
 
         existing_user.verification_code = code
         existing_user.verification_code_expires_at = expires_at
-        existing_user.updated_at = datetime.now(timezone.utc)
 
         db.add(existing_user)
         db.commit()
@@ -272,7 +269,6 @@ class AuthService:
 
         now = datetime.now(timezone.utc)
         existing_user.hashed_password = hashed_password  # type: ignore
-        existing_user.updated_at = now  # type: ignore
 
         # User-friendly time format
         reset_time = now.strftime("%Y-%m-%d %H:%M:%S UTC")
