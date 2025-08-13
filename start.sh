@@ -3,16 +3,40 @@ set -e
 
 echo "(i) Checking if Alembic is in sync..."
 
-# If the alembic_version table does not exist, stamp to head before running migrations
-if ! psql "$DATABASE_URL" -tAc "SELECT 1 FROM alembic_version LIMIT 1;" >/dev/null 2>&1; then
-    echo "(i) No alembic_version table found — stamping to head."
-    alembic stamp head
+# Check if alembic_version table exists
+if ! psql "$DATABASE_URL" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='alembic_version';" | grep -q 1; then
+    echo "(e) ERROR: No alembic_version table found."
+    echo "    This database has never been migrated."
+    echo "    Please run migrations manually before starting the app."
+    exit 1
 fi
 
 
 echo "(i) Running Alembic migrations..."
-alembic downgrade -1
 alembic upgrade head || { echo "(e) Alembic upgrade failed"; exit 1; }
+
+
+# List of columns to verify
+REQUIRED_COLUMNS=(
+    "users.is_deleted"
+    "users.updated_at"
+    "users.created_at"
+)
+
+for col in "${REQUIRED_COLUMNS[@]}"; do
+    TABLE="${col%%.*}"
+    COLUMN="${col##*.}"
+    EXISTS=$(psql "$DATABASE_URL" -tAc "
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = '$TABLE' AND column_name = '$COLUMN';
+    ")
+    if [ "$EXISTS" != "1" ]; then
+        echo "(e) Schema verification failed: '$COLUMN' column missing from '$TABLE' table."
+        exit 1
+    fi
+done
+
 
 echo "(i) Showing migration history..."
 alembic history
