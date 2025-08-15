@@ -2,9 +2,10 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import Request, APIRouter, Depends, status
 from sqlmodel import Session
 
+from app.core.rate_limiter import limiter
 from app.db.session import get_session
 import app.schemas.auth as auth_schemas
 import app.schemas.user as user_schemas
@@ -16,8 +17,11 @@ router = APIRouter()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
+@limiter.limit("2/minute")
 async def register(
-    user_create: user_schemas.UserCreate, db: Session = Depends(get_session)
+    request: Request,
+    user_create: user_schemas.UserCreate,
+    db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
     Register a new user account.
@@ -44,8 +48,11 @@ async def register(
 
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def verify_email(
-    user_verify: auth_schemas.VerifyEmailRequest, db: Session = Depends(get_session)
+    request: Request,
+    user_verify: auth_schemas.VerifyEmailRequest,
+    db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
     Endpoint to verify a user's email address.
@@ -71,8 +78,11 @@ async def verify_email(
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def login(
-    data: auth_schemas.LoginRequest, db: Session = Depends(get_session)
+    request: Request,
+    data: auth_schemas.LoginRequest,
+    db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
     Authenticate a user and issue an access token.
@@ -97,8 +107,10 @@ async def login(
 
 
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
 async def resend_verification_email(
-    request: auth_schemas.ResendVerificationEmailRequest,
+    request: Request,
+    req_data: auth_schemas.ResendVerificationEmailRequest,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -112,7 +124,7 @@ async def resend_verification_email(
     Returns:
         dict(str, Any): Success message indicating that the verification email has been sent.
     """
-    await AuthService.resend_verification_email(request=request, db=db)
+    await AuthService.resend_verification_email(request=req_data, db=db)
 
     return standard_response(
         status="success", message="Verification email sent successfully"
@@ -120,8 +132,11 @@ async def resend_verification_email(
 
 
 @router.post("/request-password-reset", status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
 async def request_password_reset(
-    request: auth_schemas.PasswordResetLinkRequest, db: Session = Depends(get_session)
+    request: Request,
+    req_data: auth_schemas.PasswordResetLinkRequest,
+    db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
     Resend a password reset email to a user.
@@ -134,7 +149,7 @@ async def request_password_reset(
     Returns:
         dict(str, Any): Success message indicating that the password reset email has been sent.
     """
-    await AuthService.request_password_reset(request=request, db=db)
+    await AuthService.request_password_reset(request=req_data, db=db)
 
     return standard_response(
         status="success", message="Password reset email sent successfully"
@@ -142,8 +157,11 @@ async def request_password_reset(
 
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
 async def reset_password(
-    request: auth_schemas.ResetPasswordRequest, db: Session = Depends(get_session)
+    request: Request,
+    req_data: auth_schemas.ResetPasswordRequest,
+    db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
     Change the password of a user.
@@ -157,7 +175,7 @@ async def reset_password(
         dict(str, Any): Success message indicating that the user's password has been reset.
     """
     await AuthService.reset_user_password(
-        token=request.token, new_password=request.new_password, db=db
+        token=req_data.token, new_password=req_data.new_password, db=db
     )
 
     return standard_response(status="success", message="Password reset successfully")

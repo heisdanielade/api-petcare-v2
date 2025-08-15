@@ -6,13 +6,27 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from slowapi.errors import RateLimitExceeded
 
 from app.utils.response import standard_response
 
 
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content=standard_response(
+            status="error", message="Too many requests. Try again later"
+        ),
+    )
+
+
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     # Return original response for api docs authentication
-    if exc.status_code == 401 and exc.headers is not None and "WWW-Authenticate" in exc.headers:
+    if (
+        exc.status_code == 401
+        and exc.headers is not None
+        and "WWW-Authenticate" in exc.headers
+    ):
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail},
@@ -24,7 +38,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         content=standard_response(
             status="error",
             message=exc.detail,
-        )
+        ),
     )
 
 
@@ -46,8 +60,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content=standard_response(
             status="error",
             message="Input validation failed",
-            data={"errors": clean_errors}
-        )
+            data={"errors": clean_errors},
+        ),
     )
 
 
@@ -55,9 +69,9 @@ async def internal_server_error_handler(request: Request, exc: Exception):
     # TODO: log the stack trace
 
     return JSONResponse(
-        status_code=500,
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=standard_response(
             status="error",
             message="Unexpected error occured",
-        )
+        ),
     )
