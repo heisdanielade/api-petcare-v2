@@ -8,8 +8,6 @@ from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Boolean, Column, DateTime, func
 from pydantic import EmailStr
 
-from app.models.pet import Pet
-
 
 class Role(StrEnum):
     """
@@ -55,7 +53,7 @@ class User(UserBase, table=True):
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
 
-    pets: list[Pet] = Relationship(back_populates="owner")
+    pets: list["Pet"] = Relationship(back_populates="owner")
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
@@ -75,3 +73,9 @@ class User(UserBase, table=True):
         if name == "created_at" and hasattr(self, "created_at"):
             raise AttributeError("created_at is immutable")
         super().__setattr__(name, value)
+
+
+# Resolve forward references after both classes are defined
+from app.models.pet import Pet
+
+User.model_rebuild()
