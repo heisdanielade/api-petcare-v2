@@ -4,9 +4,11 @@ from typing import Optional
 from enum import StrEnum
 from datetime import datetime, timezone
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Boolean, Column, DateTime, func
 from pydantic import EmailStr
+
+from app.models.pet import Pet
 
 
 class Role(StrEnum):
@@ -52,6 +54,9 @@ class User(UserBase, table=True):
     role: Role = Role.USER
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
+
+    pets: list[Pet] = Relationship(back_populates="owner")
+
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         sa_column=Column(

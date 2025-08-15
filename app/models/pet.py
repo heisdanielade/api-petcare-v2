@@ -4,7 +4,9 @@ from typing import Optional
 from enum import StrEnum
 from datetime import datetime, timezone
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+
+from app.models.user import User
 
 
 class Sex(StrEnum):
@@ -53,6 +55,9 @@ class Pet(PetBase, table=True):
     breed: Optional[str] = None
     birthDate: Optional[datetime] = None
     profileImageURL: Optional[str] = None
+
+    owner_id: int = Field(foreign_key="app_user.id")
+    owner: Optional[User] = Relationship(back_populates="pets")
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
