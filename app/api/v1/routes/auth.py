@@ -37,6 +37,7 @@ async def register(
 
     Raises:
         HTTPException: 409 Conflict if the email is already registered.
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
 
     await AuthService.register_new_user(user_create=user_create, db=db)
@@ -71,6 +72,7 @@ async def verify_email(
         HTTPException: 404 Not Found if the user account does not exist.
         HTTPException: 409 Conflict if the account is already verified.
         HTTPException: 400 Bad Request if the verification code is invalid or expired.
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     await AuthService.verify_user_email(user_verify=user_verify, db=db)
 
@@ -98,6 +100,7 @@ async def login(
     Raises:
         HTTPException: 401 Unauthorized if login credentials are invalid.
         HTTPException: 403 Forbidden if the user account is unverified.
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     response = await AuthService.login_existing_user(login_request=data, db=db)
 
@@ -123,6 +126,9 @@ async def resend_verification_email(
 
     Returns:
         dict(str, Any): Success message indicating that the verification email has been sent.
+
+    Raises:
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     await AuthService.resend_verification_email(request=req_data, db=db)
 
@@ -148,6 +154,9 @@ async def request_password_reset(
 
     Returns:
         dict(str, Any): Success message indicating that the password reset email has been sent.
+
+    Raises:
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     await AuthService.request_password_reset(request=req_data, db=db)
 
@@ -173,6 +182,9 @@ async def reset_password(
 
     Returns:
         dict(str, Any): Success message indicating that the user's password has been reset.
+
+    Raises:
+        HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     await AuthService.reset_user_password(
         token=req_data.token, new_password=req_data.new_password, db=db

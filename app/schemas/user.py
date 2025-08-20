@@ -18,6 +18,10 @@ class UserCreate(BaseModel):
         return v
 
 
+class UserDeleteScheduleRequest(BaseModel):
+    verification_code: str
+
+
 # class UserDetailsResponse(BaseModel):
 #     email: EmailStr
 #     name: Optional[str] = None

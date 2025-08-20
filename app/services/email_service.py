@@ -88,4 +88,48 @@ class EmailService:
             await fm.send_message(message=message)
         except Exception as e:
             # TODO: add logging
-            print(f"Failed to password reset notification email to {email_to}: {e}")
+            print(
+                f"Failed to send password reset notification email to {email_to}: {e}"
+            )
+
+    @staticmethod
+    async def send_account_deletion_email(email_to: str, verification_code: str):
+        template_path = TEMPLATES_DIR / "account" / "account-deletion.html"
+        template_str = template_path.read_text()
+        rendered = Template(template_str).render(verification_code=verification_code)
+
+        message = MessageSchema(
+            subject="Account Deletion Confirmation",
+            recipients=[email_to],
+            body=rendered,
+            subtype=MessageType.html,
+        )
+
+        try:
+            await fm.send_message(message=message)
+        except Exception as e:
+            # TODO: add logging
+            print(
+                f"Failed to send account deletion verification code to {email_to}: {e}"
+            )
+
+    @staticmethod
+    async def send_account_deletion_scheduled_email(email_to: str):
+        template_path = TEMPLATES_DIR / "account" / "scheduled-account-deletion.html"
+        template_str = template_path.read_text()
+        rendered = Template(template_str).render()
+
+        message = MessageSchema(
+            subject="Account Scheduled for Deletion",
+            recipients=[email_to],
+            body=rendered,
+            subtype=MessageType.html,
+        )
+
+        try:
+            await fm.send_message(message=message)
+        except Exception as e:
+            # TODO: add logging
+            print(
+                f"Failed to send account scheduled for deletion email to {email_to}: {e}"
+            )
