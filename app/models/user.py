@@ -53,7 +53,7 @@ class User(UserBase, table=True):
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
 
-    pets: list["Pet"] = Relationship(back_populates="owner")
+    pets: list["Pet"] = Relationship(back_populates="owner", cascade_delete=True)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
@@ -64,15 +64,20 @@ class User(UserBase, table=True):
         )
     )
     last_login_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
 
     def __setattr__(self, name, value) -> None:
         """
         Prevent update for `created_at` field.
         NOTE: Ultimate protection should be enforced in the DB.
         """
-        if name == "created_at" and hasattr(self, "created_at"):
+        # Allow setting 'created_at' during initialization
+        if name == "created_at" and getattr(self, "_initialized", False):
             raise AttributeError("created_at is immutable")
         super().__setattr__(name, value)
+
+    def __post_init__(self):
+        self._initialized = True
 
 
 # Resolve forward references after both classes are defined
