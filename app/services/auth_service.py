@@ -1,7 +1,5 @@
 # app/services/auth_service.py
 
-import random
-import string
 from typing import Any
 from datetime import datetime, timedelta, timezone
 
@@ -15,12 +13,10 @@ import app.schemas.auth as auth_schemas
 import app.schemas.user as user_schemas
 from app.services.email_service import EmailService
 from app.core.jwt import create_access_token, create_password_reset_token, decode_token
+from app.utils.helpers import generate_verification_code
 
 
 class AuthService:
-    @staticmethod
-    def generate_verification_code(length: int = 6):
-        return "".join(random.choices(string.digits, k=length))
 
     @staticmethod
     async def register_new_user(
@@ -50,7 +46,7 @@ class AuthService:
             )
 
         # Verification code to be sent yo user email to enable user's account
-        verification_code = AuthService.generate_verification_code()
+        verification_code = generate_verification_code()
         expires_at = datetime.now(timezone.utc) + timedelta(
             minutes=10
         )  # Valid for 10 minutes
@@ -210,7 +206,7 @@ class AuthService:
                 detail="Account is already verified",
             )
 
-        code = AuthService.generate_verification_code()
+        code = generate_verification_code()
         expires_at = datetime.now(timezone.utc) + timedelta(
             minutes=10
         )  # Valid for 10 minutes
