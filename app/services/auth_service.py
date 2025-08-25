@@ -153,6 +153,12 @@ class AuthService:
                 detail="Invalid login credentials",
             )
 
+        if not existing_user.is_enabled:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account restricted, contact support",
+            )
+
         if not existing_user.is_verified:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

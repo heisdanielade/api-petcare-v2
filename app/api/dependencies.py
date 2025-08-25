@@ -25,7 +25,7 @@ def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
     if USERNAME is None or PASSWORD is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Configuration error, please contact dev"
+            detail="Configuration error, please contact dev",
         )
 
     correct_username = secrets.compare_digest(credentials.username, USERNAME)
@@ -41,22 +41,35 @@ def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
     return True
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)) -> User:
+def get_current_user(
+    token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)
+) -> User:
     payload = decode_token(token)
     user_email = payload.get("sub")
     if not user_email:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
     stmt = select(User).where(User.email == user_email)
     user = session.exec(stmt).one_or_none()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account does not exist")
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account does not exist"
+        )
+
+    if user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account scheduled for deletion",
+        )
     return user
 
 
 def check_verified_user(user: User = Depends(get_current_user)):
     if not user.is_verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Account is unverified, kindly verify your email")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is unverified, kindly verify your email",
+        )
     return user
