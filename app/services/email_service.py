@@ -133,3 +133,22 @@ class EmailService:
             print(
                 f"Failed to send account scheduled for deletion email to {email_to}: {e}"
             )
+
+    @staticmethod
+    async def send_account_locked_email(email_to: str):
+        template_path = TEMPLATES_DIR / "account" / "account-locked.html"
+        template_str = template_path.read_text()
+        rendered = Template(template_str).render()
+
+        message = MessageSchema(
+            subject="Your account has been locked",
+            recipients=[email_to],
+            body=rendered,
+            subtype=MessageType.html,
+        )
+
+        try:
+            await fm.send_message(message=message)
+        except Exception as e:
+            # TODO: add logging
+            print(f"Failed to send account locked email to {email_to}: {e}")

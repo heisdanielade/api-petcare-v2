@@ -17,6 +17,7 @@ from app.utils.helpers import generate_verification_code
 
 
 class AuthService:
+    MAX_FAILED_ATTEMPTS = 5
 
     @staticmethod
     async def register_new_user(
@@ -140,23 +141,50 @@ class AuthService:
 
         Raises:
             HTTPException: 401 Unauthorized if the email does not exist or password is incorrect.
+            HTTPException: 403 Forbidden if the user account is disabled (restricted or locked).
             HTTPException: 403 Forbidden if the user account is not verified.
+            HTTPException: 403 Forbidden after several invalid login attempts.
         """
         stmt = select(User).where(User.email == login_request.email)
         existing_user = db.exec(stmt).one_or_none()
 
-        if not existing_user or not verify_password(
-            login_request.password, existing_user.hashed_password
-        ):
+        if not existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
+
+        if not verify_password(login_request.password, existing_user.hashed_password):
+            existing_user.failed_login_attempts += 1
+            existing_user.last_failed_login_at = datetime.now(timezone.utc)
+
+            if existing_user.failed_login_attempts >= AuthService.MAX_FAILED_ATTEMPTS:
+                existing_user.is_enabled = False
+                db.add(existing_user)
+                db.commit()
+
+                # Send security email
+                await EmailService.send_account_locked_email(existing_user.email)
+
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Account locked due to multiple failed logins",
+                )
+
+            db.add(existing_user)
+            db.commit()
+
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid login credentials",
+                detail="Invalid credentials",
             )
 
         if not existing_user.is_enabled:
+            # Send security email
+            await EmailService.send_account_locked_email(existing_user.email)
+
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account restricted, contact support",
+                detail="Account is locked, kindly check your email",
             )
 
         if not existing_user.is_verified:
@@ -175,6 +203,9 @@ class AuthService:
         access_token = create_access_token({"sub": existing_user.email})
 
         existing_user.last_login_at = datetime.now(timezone.utc)
+
+        # Reset failed attempts on success
+        existing_user.failed_login_attempts = 0
 
         db.add(existing_user)
         db.commit()
@@ -269,12 +300,16 @@ class AuthService:
         user_email = payload.get("sub")
 
         stmt = select(User).where(User.email == user_email)
-        existing_user = db.exec(stmt).one_or_none()
+        existing_user = db.exec(stmt).one()
 
         hashed_password = hash_password(new_password)
 
         now = datetime.now(timezone.utc)
         existing_user.hashed_password = hashed_password  # type: ignore
+
+        # Enable account and reset failed login attempts
+        existing_user.is_enabled = True
+        existing_user.failed_login_attempts = 0
 
         # User-friendly time format
         reset_time = now.strftime("%Y-%m-%d %H:%M:%S UTC")

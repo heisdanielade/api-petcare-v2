@@ -99,7 +99,9 @@ async def login(
 
     Raises:
         HTTPException: 401 Unauthorized if login credentials are invalid.
-        HTTPException: 403 Forbidden if the user account is unverified.
+        HTTPException: 403 Forbidden if the user account is disabled (restricted or locked).
+        HTTPException: 403 Forbidden if the user account is not verified.
+        HTTPException: 403 Forbidden after several invalid login attempts.
         HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
     response = await AuthService.login_existing_user(login_request=data, db=db)

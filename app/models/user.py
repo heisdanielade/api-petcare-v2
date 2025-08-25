@@ -53,6 +53,9 @@ class User(UserBase, table=True):
     verification_code: Optional[str] = None
     verification_code_expires_at: Optional[datetime] = None
 
+    failed_login_attempts: int = Field(default=0)
+    last_failed_login_at: Optional[datetime] = None
+
     pets: list["Pet"] = Relationship(back_populates="owner", cascade_delete=True)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
