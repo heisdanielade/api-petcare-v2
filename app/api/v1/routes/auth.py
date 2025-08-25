@@ -104,7 +104,7 @@ async def login(
         HTTPException: 403 Forbidden after several invalid login attempts.
         HTTPException: 429 Too Many Requests if the rate limit is exceeded.
     """
-    response = await AuthService.login_existing_user(login_request=data, db=db)
+    response = await AuthService.login_existing_user(request=request, login_request=data, db=db)
 
     return standard_response(
         status="success", message="Login successful", data=response

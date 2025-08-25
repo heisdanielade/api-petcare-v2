@@ -3,9 +3,10 @@
 from typing import Any
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from sqlmodel import Session, select
 
+from app.core.logging import logger
 from app.models.user import User
 from app.core.security import hash_password, verify_password
 from app.core.config import settings
@@ -123,7 +124,7 @@ class AuthService:
 
     @staticmethod
     async def login_existing_user(
-        login_request: auth_schemas.LoginRequest, db: Session
+        request: Request, login_request: auth_schemas.LoginRequest, db: Session
     ) -> dict[str, Any]:
         """
         Authenticate an existing user and generate a JWT access token.
@@ -145,6 +146,8 @@ class AuthService:
             HTTPException: 403 Forbidden if the user account is not verified.
             HTTPException: 403 Forbidden after several invalid login attempts.
         """
+        ip = request.client.host  # type: ignore
+
         stmt = select(User).where(User.email == login_request.email)
         existing_user = db.exec(stmt).one_or_none()
 
@@ -156,6 +159,10 @@ class AuthService:
         if not verify_password(login_request.password, existing_user.hashed_password):
             existing_user.failed_login_attempts += 1
             existing_user.last_failed_login_at = datetime.now(timezone.utc)
+
+            logger.warning(
+                f"Failed login attempt for user_id={existing_user.id}, IP={ip}"
+            )
 
             if existing_user.failed_login_attempts >= AuthService.MAX_FAILED_ATTEMPTS:
                 existing_user.is_enabled = False

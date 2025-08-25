@@ -7,11 +7,18 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
+from app.core.logging import logger
+from app.core.logging import log_rate_limit_exceeded
 from app.utils.response import standard_response
 
 
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    client_ip = get_remote_address(request=request)
+
+    log_rate_limit_exceeded(request=request, ip=client_ip)
+
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content=standard_response(
@@ -66,12 +73,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 async def internal_server_error_handler(request: Request, exc: Exception):
-    # TODO: log the stack trace
+    logger.exception("Unexpected error occurred")
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=standard_response(
             status="error",
-            message="Unexpected error occured",
+            message="Unexpected error occurred",
         ),
     )

@@ -5,7 +5,6 @@ import sys
 import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from datetime import datetime
 
 from fastapi import Request
 
@@ -51,7 +50,27 @@ async def log_requests(request: Request, call_next):
     process_time = (time.time() - start_time) * 1000
 
     logger.info(
-        f"{request.method} Request from {masked_ip} to {request.url.path} "
+        f"{request.method} {request.url.path} from {masked_ip} "
         f"completed_in={process_time:.2f}ms, status_code={response.status_code}"
     )
     return response
+
+
+def log_rate_limit_exceeded(request: Request, ip: str):
+    """
+    Log when a user exceeds the rate limit.
+
+    Args:
+        ip (str): The raw client IP address.
+        request (Request): FastAPI request object for extracting path/method.
+    """
+    masked_ip = mask_ip(ip)
+    endpoint = request.url.path
+    method = request.method
+
+    logger.warning(
+        "Rate limit exceeded from %s at %s with method=%s",
+        masked_ip,
+        endpoint,
+        method,
+    )
