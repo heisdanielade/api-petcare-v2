@@ -1,8 +1,9 @@
 # app/main.py
 
+import time
 from typing import Any
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -16,6 +17,7 @@ from app.api.v1.routes import health
 from app.api.v1.routes import auth
 from app.api.v1.routes import user
 
+from app.core.logging import log_requests
 from app.core.rate_limiter import limiter
 import app.utils.handlers as handler
 from app.utils.response import standard_response
@@ -32,6 +34,8 @@ origins = [
 ]
 
 # Middlewares
+app.middleware("http")(log_requests)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

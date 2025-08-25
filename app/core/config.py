@@ -8,13 +8,16 @@ from fastapi_mail import ConnectionConfig
 from fastapi.templating import Jinja2Templates
 
 # Template loader
-templates = Jinja2Templates(directory=str(
-    Path(__file__).parent.parent / "templates" / "email"))
+templates = Jinja2Templates(
+    directory=str(Path(__file__).parent.parent / "templates" / "email")
+)
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates" / "email"
 
 
 class Settings(BaseSettings):
+    ENV: Optional[str] = None
+
     DOCS_USERNAME: Optional[str] = None
     DOCS_PASSWORD: Optional[str] = None
 
@@ -57,5 +60,5 @@ mail_config = ConnectionConfig(
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
-    TEMPLATE_FOLDER=TEMPLATES_DIR
+    TEMPLATE_FOLDER=TEMPLATES_DIR,
 )

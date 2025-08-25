@@ -3,6 +3,8 @@
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from jinja2 import Template
 
+from app.core.logging import logger
+from app.utils.helpers import mask_email
 from app.core.config import TEMPLATES_DIR, mail_config, settings
 
 
@@ -27,8 +29,9 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(f"Failed to send verification email to {email_to}: {e}")
+            logger.exception(
+                msg=f"Failed to send verification email to {mask_email(email_to)}"
+            )
 
     @staticmethod
     async def send_welcome_email(email_to: str):
@@ -46,8 +49,9 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(f"Failed to send welcome email to {email_to}: {e}")
+            logger.exception(
+                msg=f"Failed to send welcome email to {mask_email(email_to)}"
+            )
 
     @staticmethod
     async def send_password_reset_email(email_to: str, reset_token: str):
@@ -68,8 +72,9 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(f"Failed to send password reset email to {email_to}: {e}")
+            logger.exception(
+                msg=f"Failed to send password reset email to {mask_email(email_to)}"
+            )
 
     @staticmethod
     async def send_password_reset_notification_email(email_to: str, reset_time: str):
@@ -87,9 +92,8 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(
-                f"Failed to send password reset notification email to {email_to}: {e}"
+            logger.exception(
+                msg=f"Failed to send password reset notification email to {mask_email(email_to)}"
             )
 
     @staticmethod
@@ -108,9 +112,8 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(
-                f"Failed to send account deletion verification code to {email_to}: {e}"
+            logger.exception(
+                msg=f"Failed to send account deletion verification code email to {mask_email(email_to)}"
             )
 
     @staticmethod
@@ -129,9 +132,8 @@ class EmailService:
         try:
             await fm.send_message(message=message)
         except Exception as e:
-            # TODO: add logging
-            print(
-                f"Failed to send account scheduled for deletion email to {email_to}: {e}"
+            logger.exception(
+                msg=f"Failed to send acount deletion scheduled email to {mask_email(email_to)}"
             )
 
     @staticmethod
@@ -151,4 +153,6 @@ class EmailService:
             await fm.send_message(message=message)
         except Exception as e:
             # TODO: add logging
-            print(f"Failed to send account locked email to {email_to}: {e}")
+            logger.exception(
+                msg=f"Failed to send account locked email to {mask_email(email_to)}"
+            )

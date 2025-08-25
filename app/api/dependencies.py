@@ -21,7 +21,6 @@ PASSWORD = settings.DOCS_PASSWORD
 
 
 def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
-    # TODO: add logging for request
     if USERNAME is None or PASSWORD is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
