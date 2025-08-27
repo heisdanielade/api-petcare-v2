@@ -174,7 +174,7 @@ class AuthService:
 
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Account locked due to multiple failed logins",
+                    detail="Account locked, multiple failed attempts",
                 )
 
             db.add(existing_user)

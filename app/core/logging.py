@@ -22,12 +22,13 @@ logger.propagate = False
 if logger.hasHandlers():
     logger.handlers.clear()
 
-# Console handler
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(
-    logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
-)
-logger.addHandler(console_handler)
+# Console handler (only in prod as FastAPI handles log requests logs already)
+if ENV != "development":
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(
+        logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+    )
+    logger.addHandler(console_handler)
 
 # File handler (only in dev)
 if ENV != "production":
