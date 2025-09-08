@@ -19,7 +19,7 @@
 
 | Layer           | Technology                             |
 |-----------------|----------------------------------------|
-| Language        | Python                                 |
+| Language        | Python, Bash (startup script)          |
 | Backend         | FastAPI (with built-in OpenAPI docs)   |
 | Database        | PostgreSQL (with Alembic migrations)   |
 | Validation      | Pydantic                               |
