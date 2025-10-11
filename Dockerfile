@@ -16,6 +16,6 @@ COPY alembic.ini ./alembic.ini
 COPY alembic ./alembic
 COPY ./start.sh ./start.sh
 
-RUN chmod +x ./start.sh
+RUN chmod +x ./scripts/start.sh
 
-CMD ["./start.sh"]
+CMD ["./scripts/start.sh"]
