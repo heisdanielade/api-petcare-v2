@@ -22,7 +22,7 @@ class AuthService:
 
     @staticmethod
     async def register_new_user(
-        user_create: user_schemas.UserCreate, db: Session
+        user_create: user_schemas.UserCreate, db: Session, background_tasks=None
     ) -> None:
         """
         Register a new user in the database and initiate email verification.
@@ -65,13 +65,20 @@ class AuthService:
         db.commit()
         db.refresh(user)
 
-        await EmailService.send_verification_email(
-            email_to=user.email, code=verification_code
-        )
+        if background_tasks:
+            background_tasks.add_task(
+                EmailService.send_verification_email(
+                    email_to=user.email, code=verification_code
+                )
+            )
+        else:
+            await EmailService.send_verification_email(
+                email_to=user.email, code=verification_code
+            )
 
     @staticmethod
     async def verify_user_email(
-        user_verify: auth_schemas.VerifyEmailRequest, db: Session
+        user_verify: auth_schemas.VerifyEmailRequest, db: Session, background_tasks=None
     ) -> None:
         """
         Verify a user's email address using a verification code.
@@ -120,11 +127,19 @@ class AuthService:
         db.add(existing_user)
         db.commit()
 
-        await EmailService.send_welcome_email(email_to=existing_user.email)
+        if background_tasks:
+            background_tasks.add_task(
+                EmailService.send_welcome_email(email_to=existing_user.email)
+            )
+        else:
+            await EmailService.send_welcome_email(email_to=existing_user.email)
 
     @staticmethod
     async def login_existing_user(
-        request: Request, login_request: auth_schemas.LoginRequest, db: Session
+        request: Request,
+        login_request: auth_schemas.LoginRequest,
+        db: Session,
+        background_tasks=None,
     ) -> dict[str, Any]:
         """
         Authenticate an existing user and generate a JWT access token.
@@ -170,7 +185,12 @@ class AuthService:
                 db.commit()
 
                 # Send security email
-                await EmailService.send_account_locked_email(existing_user.email)
+                if background_tasks:
+                    background_tasks.add_task(
+                        EmailService.send_account_locked_email(existing_user.email)
+                    )
+                else:
+                    await EmailService.send_account_locked_email(existing_user.email)
 
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -187,7 +207,12 @@ class AuthService:
 
         if not existing_user.is_enabled:
             # Send security email
-            await EmailService.send_account_locked_email(existing_user.email)
+            if background_tasks:
+                background_tasks.add_task(
+                    EmailService.send_account_locked_email(existing_user.email)
+                )
+            else:
+                await EmailService.send_account_locked_email(existing_user.email)
 
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -225,7 +250,9 @@ class AuthService:
 
     @staticmethod
     async def resend_verification_email(
-        request: auth_schemas.ResendVerificationEmailRequest, db: Session
+        request: auth_schemas.ResendVerificationEmailRequest,
+        db: Session,
+        background_tasks=None,
     ) -> None:
         """
         Generate and send a new email verification code to the user.
@@ -261,13 +288,22 @@ class AuthService:
         db.add(existing_user)
         db.commit()
 
-        await EmailService.send_verification_email(
-            email_to=existing_user.email, code=code
-        )
+        if background_tasks:
+            background_tasks.add_task(
+                EmailService.send_verification_email(
+                    email_to=existing_user.email, code=code
+                )
+            )
+        else:
+            await EmailService.send_verification_email(
+                email_to=existing_user.email, code=code
+            )
 
     @staticmethod
     async def request_password_reset(
-        request: auth_schemas.PasswordResetLinkRequest, db: Session
+        request: auth_schemas.PasswordResetLinkRequest,
+        db: Session,
+        background_tasks=None,
     ) -> None:
         """
         Send a password reset email with a reset link to the user.
@@ -287,12 +323,21 @@ class AuthService:
 
         reset_token = create_password_reset_token(request.email)
 
-        await EmailService.send_password_reset_email(
-            email_to=existing_user.email, reset_token=reset_token
-        )
+        if background_tasks:
+            background_tasks.add_task(
+                await EmailService.send_password_reset_email(
+                    email_to=existing_user.email, reset_token=reset_token
+                )
+            )
+        else:
+            await EmailService.send_password_reset_email(
+                email_to=existing_user.email, reset_token=reset_token
+            )
 
     @staticmethod
-    async def reset_user_password(token: str, new_password: str, db: Session) -> None:
+    async def reset_user_password(
+        token: str, new_password: str, db: Session, background_tasks=None
+    ) -> None:
         """
         Send a password reset email with a reset link to the user.
 
@@ -324,6 +369,13 @@ class AuthService:
         db.add(existing_user)
         db.commit()
 
-        await EmailService.send_password_reset_notification_email(
-            email_to=existing_user.email, reset_time=reset_time
-        )
+        if background_tasks:
+            background_tasks.add_task(
+                await EmailService.send_password_reset_notification_email(
+                    email_to=existing_user.email, reset_time=reset_time
+                )
+            )
+        else:
+            await EmailService.send_password_reset_notification_email(
+                email_to=existing_user.email, reset_time=reset_time
+            )

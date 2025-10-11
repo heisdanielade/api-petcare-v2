@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from fastapi import Request, APIRouter, Depends, status
+from fastapi import Request, APIRouter, Depends, status, BackgroundTasks
 from sqlmodel import Session
 
 from app.core.rate_limiter import limiter
@@ -21,6 +21,7 @@ router = APIRouter()
 async def register(
     request: Request,
     user_create: user_schemas.UserCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -53,6 +54,7 @@ async def register(
 async def verify_email(
     request: Request,
     user_verify: auth_schemas.VerifyEmailRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -84,6 +86,7 @@ async def verify_email(
 async def login(
     request: Request,
     data: auth_schemas.LoginRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -116,6 +119,7 @@ async def login(
 async def resend_verification_email(
     request: Request,
     req_data: auth_schemas.ResendVerificationEmailRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -144,6 +148,7 @@ async def resend_verification_email(
 async def request_password_reset(
     request: Request,
     req_data: auth_schemas.PasswordResetLinkRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
@@ -172,6 +177,7 @@ async def request_password_reset(
 async def reset_password(
     request: Request,
     req_data: auth_schemas.ResetPasswordRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
 ) -> dict[str, Any]:
     """
