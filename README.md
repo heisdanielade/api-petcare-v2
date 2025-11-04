@@ -1,6 +1,6 @@
 # 🦴 PetCare Tracker API
 
-**PamiętamPsa** or **PamPsa** shortened (Polish for *"I remember the dog"*) is a backend REST API built with **FastAPI** that allows users to manage their pets, receive notifications, and track key pet care activities. Designed with simplicity and real-life usability in mind, this project supports modern authentication and a growing feature set.
+**PamiętamPsa** or **PamPsa** shortened (Polish for *"I remember the dog"*) powered by **FastAPI**, to offer REST APIs that allow users to manage their pets, receive notifications, and track key pet care activities. Designed with simplicity and real-life usability in mind, this project supports modern authentication and a growing feature set.
 
 ---
 
@@ -79,12 +79,6 @@ This is an actively developed backend. Coming soon:
 
 - Pet Health Record Management
 
-
-### Contributing
-Kindly contact me for the possibility of collaborating/contributing, I look forward to hearing from you!
-
 ---
 
 Developed by **[heisdanielade](https://github.com/heisdanielade)**
-
----
