@@ -11,7 +11,6 @@
 - **Reminder System** *(in progress)* – Schedule and manage care-related reminders
 - **Email Notifications** – Triggered on user registration, pet addition, etc.
 - **Pet Health Records** *(planned)* – Log health events and medical history
-- **Production-ready stack** with PostgreSQL and security best practices
 
 ---
 
